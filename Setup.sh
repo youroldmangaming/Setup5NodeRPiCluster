@@ -10,6 +10,10 @@ mount.glusterfs localhost:/fs /mnt/glusterfs
 chown -R root:docker /mnt
 
 #Create Cluster - One Node
-gluster volume create fs replica 5 mini:/glusterfs rpi51:/glusterfs rpi52:/glusterfs rpi53:/glusterfs force rpi41:/glusterfs force
+gluster volume create fs replica 4 mini:/glusterfs rpi51:/glusterfs rpi52:/glusterfs rpi53:/glusterfs force rpi41:/glusterfs force
 gluster volume start fs
 gluster pool list
+
+
+#add a Node *The totoal number of nodes must be even the following will not work....will update when an additional node is avilable.
+gluster volume add-brick fs replica 4 rpi41:/glusterfs force
