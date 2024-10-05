@@ -1,3 +1,5 @@
+#!/bin/bash
+
 apt install glusterfs-server -y
 
 sudo systemctl start glusterd
