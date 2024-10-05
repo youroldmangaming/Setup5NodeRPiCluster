@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Function to print message
+print_msg() {
+  echo -e "\n\033[1;32m$1\033[0m\n"
+}
+
+# Update the system
+print_msg "Updating system packages..."
+sudo apt-get update && sudo apt-get upgrade -y
+
+# Remove old versions of Docker if present
+print_msg "Removing any old Docker versions..."
+sudo apt-get remove -y docker docker-engine docker.io containerd runc
+
+# Install required packages
+print_msg "Installing required packages..."
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+
+# Add Docker’s official GPG key
+print_msg "Adding Docker's GPG key..."
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Set up the Docker stable repository
+print_msg "Setting up Docker repository..."
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee >
+
+# Update package list with new repository
+print_msg "Updating package list with Docker repository..."
+sudo apt-get update
+
+# Install Docker
+print_msg "Installing Docker..."
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
+# Enable and start Docker service
+print_msg "Enabling and starting Docker service..."
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# Check Docker service status
+print_msg "Checking Docker service status..."
+sudo systemctl status docker --no-pager
+
+# If Docker service fails, log troubleshooting information
+if ! sudo systemctl is-active --quiet docker; then
+  print_msg "Docker failed to start. Collecting logs..."
+  sudo journalctl -xeu docker.service
+  exit 1
+fi
+
+# Check disk space
+print_msg "Checking disk space..."
+df -h
+
+# Add current user to the docker group to run Docker without sudo (optional)
+print_msg "Adding current user to Docker group..."
+sudo usermod -aG docker $USER
+
+# Inform the user to log out and log back in for group changes to take effect
+print_msg "Docker installation complete! Please log out and back in for changes to take effect."
+
+# Done
+print_msg "Docker has been installed successfully!"
