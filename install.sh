@@ -28,23 +28,20 @@ fi
 
  
 
-echo "Enter the list of hosts and associated IPs (format: HOST=IP, one per line). Type 'done' when finished:"
+#echo "Enter the list of hosts and associated IPs (format: HOST=IP, one per line). Type 'done' when finished:"
+#while true; do
 
- 
+ #   read -r line
 
-while true; do
+  #  if [[ "$line" == "done" ]]; then
 
-    read -r line
+   #     break
 
-    if [[ "$line" == "done" ]]; then
+    #fi
 
-        break
+   # echo "$line" >> "$ENV_FILE"
 
-    fi
-
-    echo "$line" >> "$ENV_FILE"
-
-done
+#done
 
 
 # Replace script1.sh and script2.sh with your actual script names
@@ -58,8 +55,8 @@ if [ -f host.sh ]; then
 else
 
     echo "host.sh not found"
-
 fi
+
 
  
 
