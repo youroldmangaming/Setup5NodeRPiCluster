@@ -49,31 +49,45 @@ done
 
 # Replace script1.sh and script2.sh with your actual script names
 
-if [ -f test1.sh ]; then
+if [ -f host.sh ]; then
 
-    chmod +x test1.sh
+    chmod +x host.sh
 
-    ./test1.sh
+    ./host.sh
 
 else
 
-    echo "test1.sh not found"
+    echo "host.sh not found"
 
 fi
 
  
 
-if [ -f test2.sh ]; then
+if [ -f share.sh ]; then
 
-    chmod +x test2.sh
+    chmod +x share.sh
 
-    ./test2.sh
+    ./share.sh
 
 else
 
-    echo "test2.sh not found"
+    echo "share.sh not found"
 
 fi
+
+
+if [ -f slurm.sh ]; then
+
+    chmod +x slurm.sh
+
+    ./slurm.sh
+
+else
+
+    echo "slurm.sh not found"
+
+fi
+
 
 
 # Step 4: Exit the repository directory
