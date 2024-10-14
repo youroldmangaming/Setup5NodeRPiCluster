@@ -1,5 +1,7 @@
 #!/bin/bash
 
+./slurmReboot.sh
+
 echo "Setting up Slurm, Munge, and OpenMPI"
 
 # Update package list and install necessary packages
