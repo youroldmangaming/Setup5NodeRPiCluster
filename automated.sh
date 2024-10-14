@@ -3,34 +3,34 @@
 #SBATCH --job-name=glusterfs_setup
 #SBATCH --output=glusterfs_setup_%j.log
 
-# Check if the script is run as root
+echo "# Check if the script is run as root"
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root. Please use 'sudo' or switch to root user."
     exit 1
 fi
 
-# Load environment variables from .env file
+echo "# Load environment variables from .env file"
 set -a
 source .env
 set +a
 
-# Convert comma-separated WORKER_NODES to an array
+echo "# Convert comma-separated WORKER_NODES to an array"
 IFS=',' read -ra WORKER_NODES <<< "$WORKER_NODES"
 
-# Calculate total number of nodes and set as replica count
+echo "# Calculate total number of nodes and set as replica count"
 REPLICA_COUNT=$((${#WORKER_NODES[@]} + 1))
 
-# Update SBATCH --nodes based on total number of nodes
+echo "# Update SBATCH --nodes based on total number of nodes"
 sed -i "s/^#SBATCH --nodes=.*/#SBATCH --nodes=$REPLICA_COUNT/" "$0"
 
-# Function to run commands on a specific node
+echo "# Function to run commands on a specific node"
 run_on_node() {
     local node=$1
     shift
     srun --nodes=1 --nodelist=$node "$@"
 }
 
-# Function to check node status and restart if necessary
+echo "# Function to check node status and restart if necessary"
 check_and_restart_node() {
     local node=$1
     while sinfo -N -n $node | grep -qE '(down|drain)'; do
@@ -40,8 +40,9 @@ check_and_restart_node() {
     done
 }
 
-# Step 1: Ensure all nodes are ready and install GlusterFS on all nodes
+echo "# Step 1: Ensure all nodes are ready and install GlusterFS on all nodes"
 for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
+    echo $node
     check_and_restart_node $node
     run_on_node $node apt update
     run_on_node $node apt install -y glusterfs-server
@@ -49,7 +50,7 @@ for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
     run_on_node $node mkdir -p $GLUSTERFS_DIR
 done
 
-# Step 2: Peer all nodes (from manager node)
+echo "# Step 2: Peer all nodes (from manager node)"
 for node in "${WORKER_NODES[@]}"; do
     run_on_node $MANAGER_NODE gluster peer probe $node || {
         echo "Failed to probe $node" >&2
@@ -57,7 +58,7 @@ for node in "${WORKER_NODES[@]}"; do
     }
 done
 
-# Step 3: Create Gluster volume (on manager node)
+echo "# Step 3: Create Gluster volume (on manager node)"
 if ! run_on_node $MANAGER_NODE gluster volume info $VOLUME_NAME; then
     VOLUME_CREATE_CMD="gluster volume create $VOLUME_NAME replica $REPLICA_COUNT "
     VOLUME_CREATE_CMD+="$MANAGER_NODE:$GLUSTERFS_DIR "
@@ -74,20 +75,29 @@ if ! run_on_node $MANAGER_NODE gluster volume info $VOLUME_NAME; then
     }
 fi
 
-# Step 4: Start the Gluster volume (on manager node)
-run_on_node $MANAGER_NODE gluster volume start $VOLUME_NAME || {
-    echo "Failed to start Gluster volume" >&2
-    exit 1
-}
+echo "# Step 4: Start the Gluster volume (on manager node)"
+if run_on_node $MANAGER_NODE gluster volume info $VOLUME_NAME | grep -q 'Status: Started'; then
+    echo "Gluster volume $VOLUME_NAME is already started."
+else
+    run_on_node $MANAGER_NODE gluster volume start $VOLUME_NAME || {
+        echo "Failed to start Gluster volume" >&2
+        exit 1
+    }
+fi
 
-# Step 5: Auto start GlusterFS mount on reboot (on all nodes)
+echo "# Step 5: Auto start GlusterFS mount on reboot (on all nodes)"
 for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
+
+    echo "fstab for ${WORKER_NODES[@]}"
+
     run_on_node $node bash -c "echo '$MANAGER_NODE:/$VOLUME_NAME $GLUSTERFS_DIR glusterfs defaults,_netdev,backupvolfile-server=$MANAGER_NODE 0 0' >> /etc/fstab"
     run_on_node $node mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME $GLUSTERFS_DIR
     run_on_node $node chown -R root:docker $GLUSTERFS_DIR
 done
 
-# Step 6: Verify GlusterFS mount (on all nodes)
+echo "# Step 6: Verify GlusterFS mount (on all nodes)"
 for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
     run_on_node $node df -h
 done
+
+echo "finished"
