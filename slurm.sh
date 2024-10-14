@@ -40,9 +40,9 @@ wget https://github.com/openpmix/openpmix/releases/download/v4.2.2/pmix-4.2.2.ta
 
 # Copy configuration files from /clusterfs
 echo "Copying configuration files"
-cp /clusterfs/slurm.conf /etc/slurm/slurm.conf || { echo "Failed to copy slurm.conf"; exit 1; }
-cp /clusterfs/munge.key /etc/munge/munge.key || { echo "Failed to copy munge.key"; exit 1; }
-cp /clusterfs/cgroup.conf /etc/slurm/cgroup.conf || { echo "Failed to copy cgroup.conf"; exit 1; }
+cp ./slurm.conf /etc/slurm/slurm.conf || { echo "Failed to copy slurm.conf"; exit 1; }
+cp ./munge.key /etc/munge/munge.key || { echo "Failed to copy munge.key"; exit 1; }
+cp ./cgroup.conf /etc/slurm/cgroup.conf || { echo "Failed to copy cgroup.conf"; exit 1; }
 
 # Ensure proper permissions for Slurm and Munge directories
 echo "Ensuring proper permissions for Slurm and Munge directories"
