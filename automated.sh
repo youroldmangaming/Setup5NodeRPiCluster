@@ -2,7 +2,6 @@
 
 #SBATCH --job-name=glusterfs_setup
 #SBATCH --output=glusterfs_setup_%j.log
-#SBATCH --chdir=/root/Setup5NodeRPiCluster  # Set the working directory
 
 # Check if the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -10,23 +9,10 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Check if the Setup5NodeRPiCluster directory exists; if not, create it
-SETUP_DIR="/root/Setup5NodeRPiCluster"
-
-if [ ! -d "$SETUP_DIR" ]; then
-    mkdir -p "$SETUP_DIR"
-    echo "Created directory $SETUP_DIR"
-fi
-
 # Load environment variables from .env file
 set -a
 source .env
 set +a
-
-# Debugging: Log the current directory and environment variables
-echo "Current Directory: $(pwd)" >> /tmp/glusterfs_setup_debug.log
-echo "Environment Variables:" >> /tmp/glusterfs_setup_debug.log
-env >> /tmp/glusterfs_setup_debug.log
 
 # Convert comma-separated WORKER_NODES to an array
 IFS=',' read -ra WORKER_NODES <<< "$WORKER_NODES"
@@ -65,26 +51,34 @@ done
 
 # Step 2: Peer all nodes (from manager node)
 for node in "${WORKER_NODES[@]}"; do
-    run_on_node $MANAGER_NODE gluster peer probe $node || {
-        echo "Failed to probe $node" >&2
+    if ! gluster peer status | grep -q $node; then
+        run_on_node $MANAGER_NODE gluster peer probe $node || {
+            echo "Failed to probe $node" >&2
+            exit 1
+        }
+    else
+        echo "$node is already a peer, skipping..."
+    fi
+done
+
+# Step 3: Create Gluster volume (on manager node) if it doesn't exist
+if ! gluster volume info $VOLUME_NAME > /dev/null 2>&1; then
+    VOLUME_CREATE_CMD="gluster volume create $VOLUME_NAME replica $REPLICA_COUNT "
+    VOLUME_CREATE_CMD+="$MANAGER_NODE:$GLUSTERFS_DIR "
+
+    for node in "${WORKER_NODES[@]}"; do
+        VOLUME_CREATE_CMD+="$node:$GLUSTERFS_DIR "
+    done
+
+    VOLUME_CREATE_CMD+="force"
+
+    run_on_node $MANAGER_NODE $VOLUME_CREATE_CMD || {
+        echo "Failed to create Gluster volume" >&2
         exit 1
     }
-done
-
-# Step 3: Create Gluster volume (on manager node)
-VOLUME_CREATE_CMD="gluster volume create $VOLUME_NAME replica $REPLICA_COUNT "
-VOLUME_CREATE_CMD+="$MANAGER_NODE:$GLUSTERFS_DIR "
-
-for node in "${WORKER_NODES[@]}"; do
-    VOLUME_CREATE_CMD+="$node:$GLUSTERFS_DIR "
-done
-
-VOLUME_CREATE_CMD+="force"
-
-run_on_node $MANAGER_NODE $VOLUME_CREATE_CMD || {
-    echo "Failed to create Gluster volume" >&2
-    exit 1
-}
+else
+    echo "Volume $VOLUME_NAME already exists, skipping creation..."
+fi
 
 # Step 4: Start the Gluster volume (on manager node)
 run_on_node $MANAGER_NODE gluster volume start $VOLUME_NAME || {
@@ -103,3 +97,4 @@ run_on_node $MANAGER_NODE mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME /mnt || {
     echo "Failed to mount Gluster volume" >&2
     exit 1
 }
+
