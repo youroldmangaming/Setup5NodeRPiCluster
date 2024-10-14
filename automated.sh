@@ -2,6 +2,7 @@
 
 #SBATCH --job-name=glusterfs_setup
 #SBATCH --output=glusterfs_setup_%j.log
+#SBATCH --chdir=/root/Setup5NodeRPiCluster  # Set the working directory
 
 # Check if the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -9,10 +10,23 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# Check if the Setup5NodeRPiCluster directory exists; if not, create it
+SETUP_DIR="/root/Setup5NodeRPiCluster"
+
+if [ ! -d "$SETUP_DIR" ]; then
+    mkdir -p "$SETUP_DIR"
+    echo "Created directory $SETUP_DIR"
+fi
+
 # Load environment variables from .env file
 set -a
 source .env
 set +a
+
+# Debugging: Log the current directory and environment variables
+echo "Current Directory: $(pwd)" >> /tmp/glusterfs_setup_debug.log
+echo "Environment Variables:" >> /tmp/glusterfs_setup_debug.log
+env >> /tmp/glusterfs_setup_debug.log
 
 # Convert comma-separated WORKER_NODES to an array
 IFS=',' read -ra WORKER_NODES <<< "$WORKER_NODES"
@@ -89,5 +103,3 @@ run_on_node $MANAGER_NODE mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME /mnt || {
     echo "Failed to mount Gluster volume" >&2
     exit 1
 }
-
-echo "GlusterFS setup completed successfully!"
