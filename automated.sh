@@ -91,6 +91,10 @@ for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
     echo "fstab for ${WORKER_NODES[@]}"
 
     run_on_node $node bash -c "echo '$MANAGER_NODE:/$VOLUME_NAME $GLUSTERFS_DIR glusterfs defaults,_netdev,backupvolfile-server=$MANAGER_NODE 0 0' >> /etc/fstab"
+    
+    run_on_node $node systemctl daemon-reload
+    run_on_node $node mount -a
+ 
     run_on_node $node mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME $GLUSTERFS_DIR
     run_on_node $node chown -R root:docker $GLUSTERFS_DIR
 done
