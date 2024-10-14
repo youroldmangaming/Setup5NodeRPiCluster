@@ -51,18 +51,14 @@ done
 
 # Step 2: Peer all nodes (from manager node)
 for node in "${WORKER_NODES[@]}"; do
-    if ! gluster peer status | grep -q $node; then
-        run_on_node $MANAGER_NODE gluster peer probe $node || {
-            echo "Failed to probe $node" >&2
-            exit 1
-        }
-    else
-        echo "$node is already a peer, skipping..."
-    fi
+    run_on_node $MANAGER_NODE gluster peer probe $node || {
+        echo "Failed to probe $node" >&2
+        exit 1
+    }
 done
 
-# Step 3: Create Gluster volume (on manager node) if it doesn't exist
-if ! gluster volume info $VOLUME_NAME > /dev/null 2>&1; then
+# Step 3: Create Gluster volume (on manager node)
+if ! run_on_node $MANAGER_NODE gluster volume info $VOLUME_NAME; then
     VOLUME_CREATE_CMD="gluster volume create $VOLUME_NAME replica $REPLICA_COUNT "
     VOLUME_CREATE_CMD+="$MANAGER_NODE:$GLUSTERFS_DIR "
 
@@ -76,8 +72,6 @@ if ! gluster volume info $VOLUME_NAME > /dev/null 2>&1; then
         echo "Failed to create Gluster volume" >&2
         exit 1
     }
-else
-    echo "Volume $VOLUME_NAME already exists, skipping creation..."
 fi
 
 # Step 4: Start the Gluster volume (on manager node)
@@ -86,15 +80,14 @@ run_on_node $MANAGER_NODE gluster volume start $VOLUME_NAME || {
     exit 1
 }
 
-# Step 5: Auto start GlusterFS mount on reboot (on manager node)
-run_on_node $MANAGER_NODE bash -c "echo '$MANAGER_NODE:/$VOLUME_NAME /mnt glusterfs defaults,_netdev,backupvolfile-server=$MANAGER_NODE 0 0' >> /etc/fstab"
-run_on_node $MANAGER_NODE mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME /mnt
-run_on_node $MANAGER_NODE chown -R root:docker /mnt
+# Step 5: Auto start GlusterFS mount on reboot (on all nodes)
+for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
+    run_on_node $node bash -c "echo '$MANAGER_NODE:/$VOLUME_NAME $GLUSTERFS_DIR glusterfs defaults,_netdev,backupvolfile-server=$MANAGER_NODE 0 0' >> /etc/fstab"
+    run_on_node $node mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME $GLUSTERFS_DIR
+    run_on_node $node chown -R root:docker $GLUSTERFS_DIR
+done
 
-# Step 6: Verify GlusterFS mount (on manager node)
-run_on_node $MANAGER_NODE df -h
-run_on_node $MANAGER_NODE mount.glusterfs $MANAGER_NODE:/$VOLUME_NAME /mnt || {
-    echo "Failed to mount Gluster volume" >&2
-    exit 1
-}
-
+# Step 6: Verify GlusterFS mount (on all nodes)
+for node in $MANAGER_NODE "${WORKER_NODES[@]}"; do
+    run_on_node $node df -h
+done
