@@ -1,0 +1,71 @@
+services:
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Pacific/Auckland
+      - CLI_ARGS= #optional
+    volumes:
+      - ./config:/config
+      - ./backups:/backups
+      - /:/source
+    ports:
+      - 8200:8200
+    restart: unless-stopped
+
+
+  beszel-agent:
+    image: "henrygd/beszel-agent"
+    container_name: "beszel-agent"
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      PORT: 45876
+      KEY: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAbg2l99sUXmB+06dVCEv4NGrBhehQsKwlzJ96Uyxit0"
+
+
+  zerotier:
+    image: zerotier/zerotier  # Use the official ZeroTier Docker image
+    container_name: zerotier-client
+    restart: always
+    network_mode: "host"  # Use the host's network stack (required for ZeroTier)
+    environment:
+      - ZT_NETWORK_ID=17d709436c9787ee  # Replace with your ZeroTier network ID
+    volumes:
+      - /var/lib/zerotier-one:/var/lib/zerotier-one  # Store persistent ZeroTier identity
+    cap_add:
+      - NET_ADMIN  # Grant the container network admin capabilities
+    devices:
+      - /dev/net/tun  # Required for tunneling
+    command: ["-d"]  # Run ZeroTier in daemon mode
+
+
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: syncthing
+    hostname: ${HOSTNAME}
+    user: "1000:1000"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Pacific/Auckland}
+    volumes:
+      - ./syncthing-config:/var/syncthing/config:rw
+      - ./syncthing-data:/var/syncthing:rw
+    ports:
+      - "8384:8384"  # Web UI
+      - "22000:22000"  # TCP file transfers
+      - "22000:22000/udp"  # QUIC file transfers
+      - "21027:21027/udp"  # Discovery broadcasts
+    restart: unless-stopped
+    networks:
+      - syncthing_net
+    cap_add:
+      - NET_BIND_SERVICE
+networks:
+  syncthing_net:
+    driver: bridge
