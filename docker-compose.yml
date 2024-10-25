@@ -44,6 +44,22 @@ services:
     command: ["-d"]  # Run ZeroTier in daemon mode
 
 
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    environment:
+      - PUID=1000  # Change this to your user ID
+      - PGID=1000  # Change this to your group ID
+      - TZ=Pacific/Auckland  # Set your timezone
+    ports:
+      - 80:80  # Expose the web UI on port 8080
+    restart: unless-stopped
+    volumes:
+      - ./syncthing-data:/srv #Change to match your directory
+      - ./filebrowser/filebrowser.db:/database/filebrowser.db #Change to match your directory
+      - ./filebrowser/settings.json:/config/settings.json #Change to match your directory
+
+
   syncthing:
     image: syncthing/syncthing:latest
     container_name: syncthing
@@ -69,3 +85,4 @@ services:
 networks:
   syncthing_net:
     driver: bridge
+
