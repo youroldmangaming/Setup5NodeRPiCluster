@@ -16,6 +16,18 @@ services:
     restart: unless-stopped
 
 
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    network_mode: host
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+
+
   beszel-agent:
     image: "henrygd/beszel-agent"
     container_name: "beszel-agent"
