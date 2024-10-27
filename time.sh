@@ -1,3 +1,5 @@
+#this connects to the central GPS time server
+
 sudo apt-get install chrony
 
 echo "confdir /etc/chrony/conf.d
