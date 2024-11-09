@@ -30,6 +30,7 @@ echo "Run Scripts"
 ./share.sh
 ./slurm.sh
 ./docker
+./keepalived.sh
 
 
 
