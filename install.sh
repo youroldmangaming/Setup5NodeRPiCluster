@@ -26,9 +26,9 @@ chmod 777 *.sh
 echo "Step 3: updates /etc/hosts"
 cp hosts /etc/
 
-echo "Step 4: connect to NTFS /clusterfs/"
+echo "Run Scripts"
 ./share.sh
-
+./slurm.sh
 
 
 
