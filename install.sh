@@ -1,4 +1,4 @@
-#!/bin/bash
+o#!/bin/bash
 
 echo "# Check if the script is run as root"
 if [ "$(id -u)" -ne 0 ]; then
@@ -19,11 +19,10 @@ git clone "$REPO_URL" "$REPO_DIR"
 
  
 
-# Step 2: Change into the repository directory
-
+echo "# Step 2: Change into the repository directory"
 cd "$REPO_DIR" || { echo "Failed to enter directory: $REPO_DIR"; exit 1; }
 
- 
+ cp hosts /etc/
 
 # Step 3: Execute your scripts
 # Step 3: Create .env file
