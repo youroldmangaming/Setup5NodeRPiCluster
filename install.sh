@@ -62,6 +62,10 @@ case $HOSTNAME in
         
     "rpi41")
         echo "Processing for time server..."
+        git clone https://github.com/youroldmangaming/ClusterTimeAdjustment.git gps-time-server
+        chmod 777 gps-time-server/*.sh
+        ./gps-time-server/setup.sh
+        
         # Add your dev-server specific commands here
         # For example:
         # run_dev_tasks.sh
