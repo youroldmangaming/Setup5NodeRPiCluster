@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Get the hostname
+HOSTNAME=$(hostname)
+
+# Print the detected hostname
+echo "Detected hostname: $HOSTNAME"
+
 echo "# Check if the script is run as root"
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root. Please use 'sudo' or switch to root user."
@@ -37,6 +43,48 @@ echo "Run Scripts"
 
 
 
+# Function for error handling
+handle_error() {
+    echo "Error: $1"
+    exit 1
+}
+
+
+# Case statement to handle different hostnames
+case $HOSTNAME in
+    "mini")
+        echo "Processing for mini server..."
+        # Add your mini-specific commands here
+        # For example:
+        # cd /path/specific/to/mini
+        # ./mini_specific_script.sh
+        ;;
+        
+    "rpi41")
+        echo "Processing for time server..."
+        # Add your dev-server specific commands here
+        # For example:
+        # run_dev_tasks.sh
+        ;;
+        
+    "rpi51")
+        echo "Processing for production server..."
+        # Add your production specific commands here
+        # For example:
+        # run_prod_tasks.sh
+        ;;
+        
+    "rpi52")
+        echo "Processing for laptop..."
+        # Add your laptop specific commands here
+        # For example:
+        # run_laptop_specific_tasks.sh
+        ;;
+        
+    *)
+        handle_error "Unknown hostname: $HOSTNAME"
+        ;;
+esac
 
 
 # Step 3: Execute your scripts
