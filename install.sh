@@ -21,7 +21,7 @@ git clone "$REPO_URL" "$REPO_DIR"
 
 echo "# Step 2: Change into the repository directory"
 cd "$REPO_DIR" || { echo "Failed to enter directory: $REPO_DIR"; exit 1; }
-chmod 777 *.sh
+chmod 777 *
 
 echo "Step 3: updates /etc/hosts"
 cp hosts /etc/
@@ -29,6 +29,7 @@ cp hosts /etc/
 echo "Run Scripts"
 ./share.sh
 ./slurm.sh
+./docker
 
 
 
