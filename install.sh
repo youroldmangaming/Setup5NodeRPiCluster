@@ -31,6 +31,7 @@ echo "Run Scripts"
 ./slurm.sh
 ./docker
 ./keepalived.sh
+./mkdirs.sh
 ./join.sh
 
 
