@@ -14,8 +14,7 @@ REPO_URL="https://github.com/youroldmangaming/Setup5NodeRPiCluster.git" # Change
 REPO_DIR="Setup" # Change this to your desired directory name if different
 ENV_FILE="../.env"
 
-# Step 1: Clone the repository
-
+echo "Step 1: Clone the repository"
 git clone "$REPO_URL" "$REPO_DIR"
 
  
