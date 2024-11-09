@@ -1,5 +1,7 @@
 #!/bin/bash
 
+apt install git
+
 # Variables
 REPO_URL="https://github.com/youroldmangaming/Setup5NodeRPiCluster.git" # Change this to your repository URL
 REPO_DIR="Setup" # Change this to your desired directory name if different
