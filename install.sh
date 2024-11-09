@@ -33,6 +33,9 @@ echo "Run Scripts"
 ./keepalived.sh
 ./mkdirs.sh
 ./join.sh
+./time.sh
+
+
 
 
 
