@@ -61,6 +61,7 @@ case $HOSTNAME in
         ;;
         
     "rpi41")
+        ./proxmox.sh
         echo "Processing for time server..."
         git clone https://github.com/youroldmangaming/ClusterTimeAdjustment.git gps-time-server
         chmod 777 gps-time-server/*.sh
@@ -72,6 +73,7 @@ case $HOSTNAME in
         ;;
         
     "rpi51")
+        ./proxmox.sh
         echo "Processing for production server..."
         # Add your production specific commands here
         # For example:
@@ -79,6 +81,23 @@ case $HOSTNAME in
         ;;
         
     "rpi52")
+        ./proxmox.sh
+        echo "Processing for laptop..."
+        # Add your laptop specific commands here
+        # For example:
+        # run_laptop_specific_tasks.sh
+        ;;
+     
+    "rpi53")
+        ./proxmox.sh
+        echo "Processing for laptop..."
+        # Add your laptop specific commands here
+        # For example:
+        # run_laptop_specific_tasks.sh
+        ;;
+      
+    "rpi54")
+        ./proxmox.sh
         echo "Processing for laptop..."
         # Add your laptop specific commands here
         # For example:
